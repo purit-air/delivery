@@ -1,0 +1,10 @@
+# Ignore local environment configuration
+.env.local
+.env
+
+# Ignore editor files
+.vscode/
+
+# Ignore Supabase local artifacts
+supabase/.temp
+supabase/.cache

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Track Shipment — Delivio</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="css/track.css" />
+</head>
+<body>
+  <div class="track-root">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-icon">🚚</span>
+        <span>Delivio</span>
+      </a>
+      <button class="home-btn" type="button" onclick="location.href='index.html'">
+        <span class="icon">⌂</span> Home
+      </button>
+    </header>
+
+    <main class="container track-page" id="main-content">
+      <section class="hero">
+        <h1>Track your shipment</h1>
+        <p>Enter your tracking number to get the latest status and timeline of your delivery.</p>
+
+        <form id="track-form" class="tracking-form" aria-label="Track shipment">
+          <div class="input-wrap">
+            <span class="search-icon">⌕</span>
+            <input id="tracking" name="tracking" placeholder="TRE-XXXX-XXXX-XXXX" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" aria-required="true" autocomplete="off" spellcheck="false" />
+          </div>
+          <button class="primary-btn" type="submit">Track Shipment <span>→</span></button>
+        </form>
+
+        <div id="loader" class="loader" hidden aria-hidden="true"></div>
+        <div id="status" role="status" aria-live="polite" class="visually-hidden">Idle</div>
+        <div id="result" class="result" hidden></div>
+
+        <div id="empty" class="empty-state">
+          <div class="empty-icon">📦</div>
+          <h3>Track your shipment</h3>
+          <p class="muted">Enter a tracking number above to see the latest status and timeline for your delivery.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <div class="footer-brand">Delivio</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="#">Support</a>
+        <a href="#">Privacy</a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/track.js"></script>
+</body>
+</html>

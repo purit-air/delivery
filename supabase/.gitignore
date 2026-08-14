@@ -1,0 +1,5 @@
+# Supabase project artifacts
+.supabase
+
+# Local environment files
+.env

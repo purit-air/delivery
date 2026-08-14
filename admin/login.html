@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login — Delivio</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="container auth-card">
+    <section class="card">
+      <h1>Admin Login</h1>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" required />
+        <label for="password">Password</label>
+        <input id="password" type="password" required />
+        <div class="row">
+          <button class="btn btn-primary" type="submit">Login</button>
+        </div>
+      </form>
+      <div id="auth-msg" class="muted"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>

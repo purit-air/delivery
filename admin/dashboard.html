@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — Delivio</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header small">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">Delivio</a>
+      <nav class="nav">
+        <button id="create-btn" class="btn btn-primary">Create Shipment</button>
+        <button id="logout-btn" class="btn btn-outline">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dashboard-shell">
+    <section class="dashboard-card">
+      <div class="dashboard-header">
+        <div>
+          <p class="eyebrow">Operations</p>
+          <h1>Admin Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <button id="refresh-btn" class="btn btn-outline" type="button">Refresh</button>
+          <button id="create-btn" class="btn btn-primary" type="button">Create Shipment</button>
+          <button id="logout-btn" class="btn btn-outline" type="button">Logout</button>
+        </div>
+      </div>
+
+      <div id="dashboard-banner" class="dashboard-banner hidden" role="alert"></div>
+      <div id="dashboard-loading" class="dashboard-loading">Loading shipment data…</div>
+
+      <div id="dashboard-content" class="dashboard-content hidden">
+        <div class="stats-grid">
+          <article class="stat-card total">
+            <span class="stat-label">Total shipments</span>
+            <strong id="summary-total">0</strong>
+            <small>All records in the active fleet</small>
+          </article>
+          <article class="stat-card pending">
+            <span class="stat-label">Pending</span>
+            <strong id="summary-pending">0</strong>
+            <small>Shipment created</small>
+          </article>
+          <article class="stat-card in-transit">
+            <span class="stat-label">In transit</span>
+            <strong id="summary-intransit">0</strong>
+            <small>Currently moving</small>
+          </article>
+          <article class="stat-card out-for-delivery">
+            <span class="stat-label">Out for delivery</span>
+            <strong id="summary-out-for-delivery">0</strong>
+            <small>Final-mile activities</small>
+          </article>
+          <article class="stat-card delivered">
+            <span class="stat-label">Delivered</span>
+            <strong id="summary-delivered">0</strong>
+            <small>Successfully completed</small>
+          </article>
+          <article class="stat-card exception">
+            <span class="stat-label">Exceptions</span>
+            <strong id="summary-exception">0</strong>
+            <small>Requires attention</small>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Shipment activity</h2>
+              <span id="activity-meta" class="panel-meta">Latest tracking events</span>
+            </div>
+            <ul id="activity-list" class="activity-list"></ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Status distribution</h2>
+              <span class="panel-meta">Live totals</span>
+            </div>
+            <div id="status-distribution" class="status-distribution"></div>
+          </section>
+        </div>
+
+        <div class="dashboard-grid lower-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Recent shipments</h2>
+              <button id="view-all-btn" class="panel-link" type="button">View all</button>
+            </div>
+            <div id="recent-shipments" class="shipments-list"></div>
+          </section>
+
+          <section id="alerts-panel" class="panel">
+            <div class="panel-header">
+              <h2>Actionable alerts</h2>
+              <span id="alerts-count" class="panel-meta">0 items</span>
+            </div>
+            <div id="alerts-list" class="alerts-list"></div>
+          </section>
+        </div>
+
+        <section class="panel quick-actions-panel">
+          <div class="panel-header">
+            <h2>Quick actions</h2>
+          </div>
+          <div class="quick-actions">
+            <button id="quick-create" class="btn btn-primary" type="button">Create shipment</button>
+            <button id="quick-refresh" class="btn btn-outline" type="button">Refresh dashboard</button>
+            <button id="quick-exceptions" class="btn btn-outline" type="button">Review exceptions</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

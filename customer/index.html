@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Delivio — Track your shipment</title>
+  <meta name="description" content="Track your Delivio shipment in real time. Enter your tracking ID to see status, ETA and route." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">Delivio</a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="track.html" class="btn">Track Shipment</a>
+        <a href="#services" class="btn btn-ghost">Services</a>
+        <a href="#about" class="btn btn-ghost">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <h1>Moving what matters — reliable delivery, simplified.</h1>
+          <p class="lead">From pickup to doorstep: real-time tracking, clear ETAs, and secure handling. Enter your tracking number to get started.</p>
+
+          <form id="quick-track" class="tracking-card" aria-label="Quick track">
+            <label for="q-tracking">Track your shipment</label>
+            <input id="q-tracking" name="tracking" placeholder="Enter tracking number — e.g. TRE-1234-5678-9012" aria-label="Tracking number" autocomplete="off" spellcheck="false" />
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Track Shipment</button>
+              <a href="track.html" class="btn btn-outline">Advanced tracking</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="hero-card" aria-hidden="true">
+          <svg width="420" height="260" viewBox="0 0 420 260" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Package route illustration">
+            <rect x="0" y="0" width="420" height="260" rx="12" fill="#ffffff" />
+            <path d="M30 200 C120 140, 200 60, 320 120" stroke="#dbeafe" stroke-width="8" stroke-linecap="round" fill="none" />
+            <circle cx="30" cy="200" r="8" fill="#0b6ef6" />
+            <rect x="312" y="110" width="24" height="16" rx="3" fill="#0b6ef6" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="features">
+      <div class="container">
+        <h2>Why customers trust Delivio</h2>
+        <div class="grid">
+          <div class="card feature">
+            <h3>Real‑time tracking</h3>
+            <p class="muted">Accurate status updates and timeline events powered by our tracking system.</p>
+          </div>
+          <div class="card feature">
+            <h3>Secure handling</h3>
+            <p class="muted">Carefully managed shipments with clear chain-of-custody information.</p>
+          </div>
+          <div class="card feature">
+            <h3>Reliable delivery</h3>
+            <p class="muted">Consistent service with estimated delivery dates and proactive updates.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <a class="logo" href="index.html">Delivio</a>
+          <div class="muted" style="font-size:0.9rem;margin-top:6px">Reliable delivery &middot; Trusted logistics</div>
+        </div>
+        <nav aria-label="Footer" style="display:flex;gap:12px;align-items:center">
+          <a href="track.html" class="btn">Track</a>
+          <a href="#contact" class="btn btn-ghost">Contact</a>
+        </nav>
+      </div>
+      <p style="margin-top:18px" class="muted">&copy; <span id="year"></span> Delivio. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('quick-track').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('q-tracking').value.trim();
+      if (!id) return;
+      // navigate to track page with query
+      location.href = `track.html?id=${encodeURIComponent(id)}`;
+    });
+  </script>
+</body>
+</html>

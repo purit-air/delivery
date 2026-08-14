@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Edit Shipment — Delivio</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="container admin-create-shell">
+    <section class="admin-form-card">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Shipment maintenance</p>
+          <h1>Edit Shipment</h1>
+        </div>
+        <a class="btn btn-outline" href="dashboard.html">Back to dashboard</a>
+      </div>
+
+      <div id="msg" class="form-message" role="status" aria-live="polite"></div>
+
+      <form id="edit-form" novalidate>
+        <section class="form-section">
+          <div class="section-header">
+            <h2>Shipment Identity</h2>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="trackingId">Tracking Number</label>
+              <input id="trackingId" disabled />
+            </div>
+            <div class="field">
+              <label for="carrier">Carrier</label>
+              <input id="carrier" placeholder="Delivio Express" />
+            </div>
+            <div class="field">
+              <label for="service">Service</label>
+              <input id="service" placeholder="Priority Ground" />
+            </div>
+            <div class="field">
+              <label for="status">Status</label>
+              <select id="status">
+                <option value="shipment_created">Shipment Created</option>
+                <option value="picked_up">Picked Up</option>
+                <option value="in_transit">In Transit</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="exception">Exception</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="shipment_date">Shipment Date</label>
+              <input id="shipment_date" type="date" />
+            </div>
+            <div class="field">
+              <label for="estimated_delivery">Estimated Delivery</label>
+              <input id="estimated_delivery" type="date" />
+            </div>
+            <div class="field">
+              <label for="actual_delivery">Actual Delivery</label>
+              <input id="actual_delivery" type="date" />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-header">
+            <h2>Sender</h2>
+          </div>
+          <div class="field-grid">
+            <div class="field field-span-2"><label for="sender_name">Name</label><input id="sender_name" required /></div>
+            <div class="field"><label for="sender_company">Company</label><input id="sender_company" /></div>
+            <div class="field"><label for="sender_phone">Phone</label><input id="sender_phone" type="tel" /></div>
+            <div class="field"><label for="sender_email">Email</label><input id="sender_email" type="email" /></div>
+            <div class="field field-span-2"><label for="sender_address_line_1">Address Line 1</label><input id="sender_address_line_1" /></div>
+            <div class="field"><label for="sender_address_line_2">Address Line 2</label><input id="sender_address_line_2" /></div>
+            <div class="field"><label for="sender_city">City</label><input id="sender_city" /></div>
+            <div class="field"><label for="sender_state">State / Region</label><input id="sender_state" /></div>
+            <div class="field"><label for="sender_postal_code">Postal Code</label><input id="sender_postal_code" /></div>
+            <div class="field"><label for="sender_country">Country</label><input id="sender_country" /></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-header">
+            <h2>Recipient</h2>
+          </div>
+          <div class="field-grid">
+            <div class="field field-span-2"><label for="recipient_name">Name</label><input id="recipient_name" required /></div>
+            <div class="field"><label for="recipient_company">Company</label><input id="recipient_company" /></div>
+            <div class="field"><label for="recipient_phone">Phone</label><input id="recipient_phone" type="tel" /></div>
+            <div class="field"><label for="recipient_email">Email</label><input id="recipient_email" type="email" /></div>
+            <div class="field field-span-2"><label for="recipient_address_line_1">Address Line 1</label><input id="recipient_address_line_1" /></div>
+            <div class="field"><label for="recipient_address_line_2">Address Line 2</label><input id="recipient_address_line_2" /></div>
+            <div class="field"><label for="recipient_city">City</label><input id="recipient_city" /></div>
+            <div class="field"><label for="recipient_state">State / Region</label><input id="recipient_state" /></div>
+            <div class="field"><label for="recipient_postal_code">Postal Code</label><input id="recipient_postal_code" /></div>
+            <div class="field"><label for="recipient_country">Country</label><input id="recipient_country" /></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-header">
+            <h2>Route & Package</h2>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label for="origin">Origin</label><input id="origin" required /></div>
+            <div class="field"><label for="destination">Destination</label><input id="destination" required /></div>
+            <div class="field"><label for="package_type">Package Type</label><input id="package_type" /></div>
+            <div class="field"><label for="quantity">Quantity</label><input id="quantity" type="number" min="1" step="1" /></div>
+            <div class="field"><label for="weight_kg">Weight (kg)</label><input id="weight_kg" type="number" min="0" step="0.1" /></div>
+            <div class="field"><label for="declared_value">Declared Value</label><input id="declared_value" type="number" min="0" step="0.01" /></div>
+            <div class="field"><label for="length_cm">Length (cm)</label><input id="length_cm" type="number" min="0" step="0.1" /></div>
+            <div class="field"><label for="width_cm">Width (cm)</label><input id="width_cm" type="number" min="0" step="0.1" /></div>
+            <div class="field"><label for="height_cm">Height (cm)</label><input id="height_cm" type="number" min="0" step="0.1" /></div>
+            <div class="field field-span-2"><label for="package_description">Package Description</label><input id="package_description" /></div>
+            <div class="field field-span-2"><label for="special_instructions">Special Instructions</label><textarea id="special_instructions" rows="3"></textarea></div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-header">
+            <h2>Tracking Event</h2>
+          </div>
+          <div class="field-grid">
+            <div class="field"><label for="event_status">Event Status</label><select id="event_status"><option value="">No new event</option><option value="shipment_created">Shipment Created</option><option value="picked_up">Picked Up</option><option value="in_transit">In Transit</option><option value="out_for_delivery">Out for Delivery</option><option value="delivered">Delivered</option><option value="exception">Exception</option><option value="cancelled">Cancelled</option></select></div>
+            <div class="field"><label for="event_location">Event Location</label><input id="event_location" /></div>
+            <div class="field field-span-2"><label for="event_description">Event Description</label><input id="event_description" placeholder="Package departed facility" /></div>
+          </div>
+        </section>
+
+        <div class="submit-row">
+          <button class="btn btn-primary" type="submit">Save Changes</button>
+          <button class="btn btn-outline danger" id="delete-shipment-btn" type="button">Delete Shipment</button>
+        </div>
+      </form>
+
+      <section class="form-section">
+        <div class="section-header">
+          <h2>Recent Tracking Events</h2>
+        </div>
+        <div id="tracking-events" class="tracking-events-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
