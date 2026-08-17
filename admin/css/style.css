@@ -708,59 +708,537 @@ textarea {
 }
 
 @media (max-width: 1100px) {
-  .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .dashboard-grid { grid-template-columns: 1fr; }
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 760px) {
-  .header-inner,
+@media (max-width: 900px) {
+  .container {
+    padding: 0 16px;
+  }
+
   .page-header,
-  .dashboard-header,
-  .dashboard-toolbar,
-  .submit-row {
+  .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .header-actions,
-  .quick-actions,
-  .nav {
+  .quick-actions {
     width: 100%;
   }
 
   .header-actions .btn,
   .quick-actions .btn,
-  .submit-row .btn,
-  .nav .btn {
+  .submit-row .btn {
     width: 100%;
-  }
-
-  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .field-grid,
-  .detail-grid { grid-template-columns: 1fr; }
-  .field-span-2 { grid-column: span 1; }
-  .table-wrap th:nth-child(4),
-  .table-wrap td:nth-child(4),
-  .table-wrap th:nth-child(5),
-  .table-wrap td:nth-child(5) {
-    display: none;
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
   .container {
-    width: min(100% - 20px, 1200px);
+    padding: 0 14px;
   }
 
-  .stats-grid,
-  .detail-grid { grid-template-columns: 1fr; }
+  .site-header {
+    padding: 12px 0;
+  }
+
+  .header-inner {
+    min-height: 56px;
+    padding: 8px 0;
+  }
+
+  .logo {
+    font-size: 1rem;
+    gap: 6px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .page-header,
+  .dashboard-header {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .page-header h1,
+  .dashboard-header h1 {
+    font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  }
+
+  .eyebrow {
+    font-size: 0.65rem;
+    margin: 0 0 4px;
+  }
+
+  .header-actions,
+  .quick-actions,
+  .submit-row {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .header-actions .btn,
+  .quick-actions .btn,
+  .submit-row .btn {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
 
   .dashboard-card,
   .admin-form-card,
   .panel,
   .list-panel,
   .detail-panel {
+    padding: 18px;
+  }
+
+  .form-message {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    margin: 0 0 14px;
+  }
+
+  .auth-card {
+    margin: 32px auto;
+  }
+
+  .auth-card .card {
+    padding: clamp(16px, 3vw, 24px);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    padding: 14px 12px;
+    gap: 6px;
+  }
+
+  .stat-card strong {
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .stat-card small {
+    font-size: 0.75rem;
+  }
+
+  .dashboard-grid {
+    gap: 14px;
+  }
+
+  .panel,
+  .list-panel,
+  .detail-panel {
+    padding: 14px;
+  }
+
+  .panel-header {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .panel-header h2,
+  .section-header h2 {
+    font-size: 1rem;
+  }
+
+  .panel-meta {
+    font-size: 0.75rem;
+  }
+
+  .activity-list li {
+    padding: 10px 8px;
+    gap: 10px;
+  }
+
+  .shipment-row {
+    padding: 10px 8px;
+    gap: 8px;
+  }
+
+  .form-section {
     padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .section-header {
+    margin-bottom: 12px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .field-span-2 {
+    grid-column: span 1;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.85rem;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 10px 12px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  textarea {
+    min-height: 100px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .detail-item {
+    gap: 3px;
+  }
+
+  .detail-item span {
+    font-size: 0.65rem;
+  }
+
+  .detail-item strong {
+    font-size: 0.9rem;
+  }
+
+  .table-wrap {
+    border-radius: 10px;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+
+  .table-wrap th {
+    font-size: 0.7rem;
+  }
+
+  .table-actions .btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  .pagination {
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .page-meta {
+    font-size: 0.8rem;
+  }
+
+  .timeline-list li {
+    padding-left: 12px;
+  }
+
+  .timeline-list li::before {
+    left: -5px;
+    width: 8px;
+    height: 8px;
+    top: 5px;
+  }
+
+  .tracking-event-item {
+    padding: 10px 12px;
+  }
+
+  .submit-row {
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+  .toast {
+    right: 12px;
+    bottom: 12px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .site-header {
+    padding: 8px 0;
+  }
+
+  .header-inner {
+    min-height: 48px;
+    padding: 6px 0;
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 0.95rem;
+    gap: 5px;
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .page-header,
+  .dashboard-header {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .page-header h1,
+  .dashboard-header h1 {
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+  }
+
+  .eyebrow {
+    font-size: 0.6rem;
+    margin: 0 0 3px;
+  }
+
+  .dashboard-card,
+  .admin-form-card,
+  .panel,
+  .list-panel,
+  .detail-panel {
+    padding: 14px;
+  }
+
+  .form-message {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    margin: 0 0 12px;
+  }
+
+  .auth-card {
+    margin: 24px auto;
+  }
+
+  .auth-card .card {
+    padding: clamp(12px, 2vw, 18px);
+  }
+
+  .auth-card h1 {
+    font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    padding: 12px 10px;
+    gap: 5px;
+  }
+
+  .stat-card strong {
+    font-size: clamp(1rem, 1.5vw, 1.3rem);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .stat-card small {
+    font-size: 0.7rem;
+  }
+
+  .dashboard-grid {
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .panel-header {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .panel-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .panel-meta {
+    font-size: 0.7rem;
+  }
+
+  .activity-list li {
+    padding: 8px 6px;
+    gap: 8px;
+  }
+
+  .shipment-row {
+    padding: 8px 6px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .shipment-status {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .form-section {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .section-header {
+    margin-bottom: 10px;
+  }
+
+  .field-grid {
+    gap: 10px;
+  }
+
+  label {
+    font-size: 0.8rem;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 8px 10px;
+    font-size: 16px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 14px;
+  }
+
+  textarea {
+    min-height: 90px;
+  }
+
+  .detail-grid {
+    gap: 10px;
+  }
+
+  .detail-item {
+    gap: 2px;
+  }
+
+  .detail-item span {
+    font-size: 0.6rem;
+  }
+
+  .detail-item strong {
+    font-size: 0.85rem;
+  }
+
+  .table-wrap {
+    border-radius: 8px;
+  }
+
+  .table-wrap th,
+  .table-wrap td {
+    padding: 8px 6px;
+    font-size: 0.85rem;
+  }
+
+  .table-wrap th {
+    font-size: 0.65rem;
+  }
+
+  .table-actions .btn {
+    padding: 5px 6px;
+    font-size: 0.7rem;
+  }
+
+  .pagination {
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .page-meta {
+    font-size: 0.75rem;
+  }
+
+  .timeline-list li {
+    padding-left: 10px;
+  }
+
+  .timeline-list li::before {
+    left: -4px;
+    width: 7px;
+    height: 7px;
+    top: 6px;
+  }
+
+  .tracking-event-item {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .submit-row {
+    gap: 6px;
+    padding-top: 2px;
+  }
+
+  .submit-row .btn {
+    font-size: 0.9rem;
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
+  .toast {
+    right: 10px;
+    bottom: 10px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .header-actions,
+  .quick-actions {
+    gap: 6px;
+  }
+
+  .header-actions .btn,
+  .quick-actions .btn {
+    padding: 8px 10px;
+    font-size: 0.85rem;
   }
 }
 

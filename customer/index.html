@@ -19,7 +19,10 @@
         <img src="../assets/logo.svg" alt="Delivio logo" class="brand-mark" />
         <span>Delivio</span>
       </a>
-      <nav class="nav" aria-label="Primary navigation">
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation menu">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <nav class="nav" id="primary-nav" aria-label="Primary navigation">
         <a href="track.html" class="btn">Track Shipment</a>
         <a href="#services" class="btn btn-ghost">Services</a>
         <a href="#about" class="btn btn-ghost">About</a>
@@ -37,6 +40,9 @@
           <form id="quick-track" class="tracking-card" aria-label="Quick track">
             <label for="q-tracking">Track your shipment</label>
             <input id="q-tracking" name="tracking" placeholder="Enter tracking number — e.g. TRE-1234-5678-9012" aria-label="Tracking number" autocomplete="off" spellcheck="false" inputmode="text" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" />
+            <div class="tracking-help-text">
+              <small>Find your tracking number on your order confirmation email or delivery notice. Format: <code>TRE-XXXX-XXXX-XXXX</code></small>
+            </div>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">Track Shipment</button>
             </div>
@@ -77,24 +83,78 @@
 
   <footer class="site-footer">
     <div class="container">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div>
+      <div class="footer-content">
+        <div class="footer-section footer-brand-section">
           <a class="logo" href="index.html" aria-label="Delivio home">
             <img src="../assets/logo.svg" alt="Delivio logo" class="brand-mark" />
             <span>Delivio</span>
           </a>
           <div class="muted" style="font-size:0.9rem;margin-top:6px">Reliable delivery &middot; Trusted logistics</div>
         </div>
-        <nav aria-label="Footer" style="display:flex;gap:12px;align-items:center">
-          <a href="track.html" class="btn">Track</a>
-          <a href="#contact" class="btn btn-ghost">Contact</a>
-        </nav>
+
+        <div class="footer-section footer-support-section">
+          <h3 class="footer-section-title">Support</h3>
+          <ul class="footer-links">
+            <li><a href="track.html">Track Shipment</a></li>
+            <li>
+              <!-- TODO: Add verified contact email -->
+              <!-- <a href="mailto:support@delivio.com">Email Support</a> -->
+              <span class="footer-link-placeholder">Email Support (Coming soon)</span>
+            </li>
+            <li>
+              <!-- TODO: Add verified phone number if available -->
+              <!-- <a href="tel:+1-555-000-0000">Call Support</a> -->
+              <span class="footer-link-placeholder">Phone Support (Coming soon)</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="footer-section footer-legal-section">
+          <h3 class="footer-section-title">Legal</h3>
+          <ul class="footer-links">
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Accessibility</a></li>
+          </ul>
+        </div>
       </div>
-      <p style="margin-top:18px" class="muted">&copy; <span id="year"></span> Delivio. All rights reserved.</p>
+
+      <div class="footer-bottom">
+        <p class="muted">&copy; <span id="year"></span> Delivio. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
   <script>
+    // Mobile navigation toggle
+    const navToggle = document.getElementById('nav-toggle');
+    const primaryNav = document.getElementById('primary-nav');
+    
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+        navToggle.setAttribute('aria-expanded', !isExpanded);
+        primaryNav.classList.toggle('active');
+      });
+
+      // Close menu when a link is clicked
+      const navLinks = primaryNav.querySelectorAll('a');
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          navToggle.setAttribute('aria-expanded', 'false');
+          primaryNav.classList.remove('active');
+        });
+      });
+
+      // Close menu on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navToggle.getAttribute('aria-expanded') === 'true') {
+          navToggle.setAttribute('aria-expanded', 'false');
+          primaryNav.classList.remove('active');
+        }
+      });
+    }
+
     document.getElementById('year').textContent = new Date().getFullYear();
     const quickTrackingInput = document.getElementById('q-tracking');
     const normalizeTrackingInput = (value) => {

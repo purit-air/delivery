@@ -406,12 +406,14 @@ function renderParcel(shipment, events) {
           <div class="status-topline">
             <div class="status-icon" aria-hidden="true">${escapeHtml(statusConfig.icon)}</div>
             <div class="status-copy">
-              <div class="status-title">${escapeHtml(statusLabel)}</div>
+              <div class="status-badge" aria-label="Current shipment status">
+                <span class="status-badge-label">${escapeHtml(statusLabel)}</span>
+              </div>
               <div class="status-message">${escapeHtml(currentMessage)}</div>
             </div>
           </div>
           <div class="status-location">${latestLocation ? `◆ ${escapeHtml(latestLocation)}` : ''}</div>
-          <div class="status-progress" aria-label="Shipment progress">
+          <div class="status-progress" aria-label="Shipment progress timeline">
             ${renderShipmentProgress(currentStatusKey)}
           </div>
           <div class="status-estimate">
@@ -649,19 +651,22 @@ async function lookup(id) {
     const { data, error } = await supabase.rpc('get_public_tracking', { tracking_number: normalizedId });
     if (error) {
       console.error('Supabase RPC error', error);
-      showError(getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.'));
+      const errorMsg = getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.');
+      showError(`${errorMsg} If the problem continues, please contact support.`);
       return;
     }
 
     if (!data || !data.shipment) {
-      showError('We could not find that tracking number. Please double-check the ID and try again.');
+      const helpLink = '<a href="index.html" class="error-help-link">Back to tracking</a>';
+      showError(`We couldn't find tracking number <strong>${escapeHtml(normalizedId)}</strong>. Please double-check the ID and try again. ${helpLink}`);
       return;
     }
 
     renderParcel(data.shipment, data.events || []);
   } catch (error) {
     console.error(error);
-    showError(getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.'));
+    const errorMsg = getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.');
+    showError(`${errorMsg} If the problem continues, please contact support.`);
   } finally {
     showLoader(false);
     setFormBusy(false);

@@ -40,20 +40,49 @@
         <div id="empty" class="empty-state">
           <div class="empty-icon">📦</div>
           <h3>Track your shipment</h3>
-          <p class="muted">Enter a tracking number above to see the latest status and timeline for your delivery.</p>
+          <p class="muted">Enter your tracking number above to see the latest status, estimated delivery, and full timeline.</p>
+          <div class="empty-help">
+            <p class="empty-help-title">Where to find your tracking number:</p>
+            <ul class="empty-help-list">
+              <li>Check your order confirmation email</li>
+              <li>Look on your delivery notice</li>
+              <li>Format: TRE-XXXX-XXXX-XXXX</li>
+            </ul>
+          </div>
         </div>
       </section>
     </main>
 
     <footer class="page-footer">
-      <div class="footer-brand" style="display:flex;align-items:center;gap:8px;">
-        <img src="../assets/logo.svg" alt="Delivio logo" class="brand-mark footer-mark" />
-        <span>Delivio</span>
+      <div class="footer-content">
+        <div class="footer-section footer-brand-section">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <img src="../assets/logo.svg" alt="Delivio logo" class="brand-mark footer-mark" />
+            <span>Delivio</span>
+          </div>
+          <p class="footer-tagline">Reliable delivery · Trusted logistics</p>
+        </div>
+        <div class="footer-section">
+          <h3 class="footer-section-title">Navigation</h3>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="track.html">Track Shipment</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3 class="footer-section-title">Support</h3>
+          <ul class="footer-links">
+            <li>
+              <!-- TODO: Add verified contact email -->
+              <!-- <a href="mailto:support@delivio.com">Email Support</a> -->
+              <span class="footer-link-placeholder">Email Support (Coming soon)</span>
+            </li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
       </div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="#">Support</a>
-        <a href="#">Privacy</a>
+      <div class="footer-bottom">
+        <p class="footer-copyright">&copy; 2026 Delivio. All rights reserved.</p>
       </div>
     </footer>
   </div>
