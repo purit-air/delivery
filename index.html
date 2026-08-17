@@ -8,6 +8,7 @@
   <meta property="og:title" content="Delivio — Track your shipment" />
   <meta property="og:description" content="Track your Delivio shipment in real time. Enter your tracking ID to see status, ETA and route." />
   <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +18,10 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="logo" href="index.html">Delivio</a>
+      <a class="logo" href="index.html" aria-label="Delivio home">
+        <img src="assets/logo.svg" alt="Delivio logo" class="brand-mark" />
+        <span>Delivio</span>
+      </a>
       <nav class="nav" aria-label="Primary navigation">
         <a href="track.html" class="btn">Track Shipment</a>
         <a href="#services" class="btn btn-ghost">Services</a>
@@ -36,10 +40,9 @@
 
           <form id="quick-track" class="tracking-card" aria-label="Quick track">
             <label for="q-tracking">Track your shipment</label>
-            <input id="q-tracking" name="tracking" placeholder="Enter tracking number — e.g. TRE-1234-5678-9012" aria-label="Tracking number" autocomplete="off" spellcheck="false" />
+            <input id="tracking" name="tracking" placeholder="TRE-XXXX-XXXX-XXXX" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" aria-required="true" autocomplete="on" spellcheck="false" inputmode="text" />
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">Track Shipment</button>
-              <a href="track.html" class="btn btn-outline">Advanced tracking</a>
             </div>
           </form>
         </div>
@@ -60,7 +63,7 @@
     </section>
 
     <section id="services" class="features">
-      <div class="container">
+      <div id="about" class="container">
         <h2>Why customers trust Delivio</h2>
         <div class="grid">
           <div class="card feature">
@@ -80,11 +83,14 @@
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer id="contact" class="site-footer">
     <div class="container">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div>
-          <a class="logo" href="index.html">Delivio</a>
+          <a class="logo" href="index.html" aria-label="Delivio home">
+            <img src="assets/logo.svg" alt="Delivio logo" class="brand-mark" />
+            <span>Delivio</span>
+          </a>
           <div class="muted" style="font-size:0.9rem;margin-top:6px">Reliable delivery &middot; Trusted logistics</div>
         </div>
         <nav aria-label="Footer" style="display:flex;gap:12px;align-items:center">
@@ -98,11 +104,39 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+    const quickTrackingInput = document.getElementById('q-tracking');
+    const normalizeTrackingInput = (value) => {
+      const raw = String(value || '').trim().toUpperCase();
+      const digits = raw.replace(/[^A-Z0-9]/g, '');
+      const letters = digits.replace(/[^A-Z]/g, '').slice(0, 3);
+      const numbers = digits.replace(/[^0-9]/g, '').slice(0, 12);
+
+      if (!letters && !numbers) return '';
+      if (letters === 'TRE') {
+        const groups = numbers.match(/.{1,4}/g) || [];
+        return groups.length ? `TRE-${groups.slice(0, 3).join('-')}` : 'TRE';
+      }
+      const groups = numbers.match(/.{1,4}/g) || [];
+      return groups.length ? groups.slice(0, 3).join('-') : '';
+    };
+
+    quickTrackingInput.addEventListener('input', () => {
+      const formatted = normalizeTrackingInput(quickTrackingInput.value);
+      if (formatted !== quickTrackingInput.value) {
+        quickTrackingInput.value = formatted;
+      }
+      quickTrackingInput.setAttribute('aria-invalid', formatted && !/^TRE-\d{4}-\d{4}-\d{4}$/.test(formatted) ? 'true' : 'false');
+    });
+
     document.getElementById('quick-track').addEventListener('submit', (e) => {
       e.preventDefault();
-      const id = document.getElementById('q-tracking').value.trim();
-      if (!id) return;
-      // navigate to track page with query param
+      const id = normalizeTrackingInput(quickTrackingInput.value);
+      if (!id || !/^TRE-\d{4}-\d{4}-\d{4}$/.test(id)) {
+        quickTrackingInput.setAttribute('aria-invalid', 'true');
+        quickTrackingInput.reportValidity?.();
+        return;
+      }
+      quickTrackingInput.removeAttribute('aria-invalid');
       location.href = `track.html?id=${encodeURIComponent(id)}`;
     });
   </script>

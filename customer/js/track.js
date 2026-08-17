@@ -2,12 +2,12 @@ import { supabase } from './supabase.js';
 import {
   normalizeTrackingNumber,
   isTrackingNumberValid,
-  getShipmentStatusInfo,
-  getShipmentStatusMessage,
   normalizeShipmentStatus,
   formatDateTimeDisplay,
   getFriendlyErrorMessage,
-  getShipmentStatusDisplayValue
+  getShipmentStatusDisplayValue,
+  getShipmentStatusInfo,
+  getShipmentStatusMessage
 } from '../../js/shared-contract.js';
 
 const form = document.getElementById('track-form');
@@ -16,13 +16,33 @@ const loader = document.getElementById('loader');
 const result = document.getElementById('result');
 const statusRegion = document.getElementById('status');
 
-function announce(text){ if (statusRegion) statusRegion.textContent = text }
-function showLoader(show){ if (loader) loader.hidden = !show; announce(show ? 'Loading shipment information' : 'Idle') }
+const TRACKING_STATE = {
+  shipment: null,
+  events: [],
+  filter: 'all',
+  expanded: false
+};
+
+const STATUS_SEQUENCE = ['shipment_created', 'picked_up', 'in_transit', 'exception', 'out_for_delivery', 'delivered'];
+
+const STATUS_META = {
+  shipment_created: { label: 'Shipment Created', short: 'Created', icon: '✓', variant: 'success', description: 'Shipment information received.' },
+  picked_up: { label: 'Picked Up', short: 'Picked Up', icon: '✓', variant: 'success', description: 'Package picked up and on the move.' },
+  in_transit: { label: 'In Transit', short: 'In Transit', icon: '✓', variant: 'success', description: 'Package is moving toward its destination.' },
+  exception: { label: 'Exception', short: 'Exception', icon: '!', variant: 'warning', description: 'Shipment is temporarily on hold.' },
+  out_for_delivery: { label: 'Out for Delivery', short: 'Out for Delivery', icon: '→', variant: 'neutral', description: 'Package is out for delivery.' },
+  delivered: { label: 'Delivered', short: 'Delivered', icon: '✓', variant: 'success', description: 'Delivery completed.' },
+  cancelled: { label: 'Cancelled', short: 'Cancelled', icon: '•', variant: 'neutral', description: 'Shipment has been cancelled.' },
+  unknown: { label: 'Unknown', short: 'Unknown', icon: '•', variant: 'neutral', description: 'Status is unavailable.' }
+};
+
+function announce(text){ if (statusRegion) statusRegion.textContent = text; }
+function showLoader(show){ if (loader) loader.hidden = !show; announce(show ? 'Loading shipment information' : 'Idle'); }
 function showResult(html){
   if (result){
     result.innerHTML = html;
     result.hidden = false;
-    result.scrollIntoView({behavior:'smooth',block:'nearest'});
+    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   const empty = document.getElementById('empty');
   if (empty) empty.hidden = true;
@@ -34,9 +54,9 @@ function showEmptyState(msg = 'Track your shipment', detail = 'Enter a tracking 
     empty.innerHTML = `
       <div>
         <svg width="80" height="56" viewBox="0 0 80 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="2" y="10" width="60" height="36" rx="6" fill="#f1f5f9" />
-          <rect x="12" y="18" width="36" height="20" rx="4" fill="#ffffff" />
-          <circle cx="72" cy="38" r="6" fill="#0b6ef6" />
+          <rect x="2" y="10" width="60" height="36" rx="6" fill="#f1f5f9"/>
+          <rect x="12" y="18" width="36" height="20" rx="4" fill="#ffffff"/>
+          <circle cx="72" cy="38" r="6" fill="#0b6ef6"/>
         </svg>
       </div>
       <div>
@@ -47,27 +67,22 @@ function showEmptyState(msg = 'Track your shipment', detail = 'Enter a tracking 
   if (result) result.hidden = true;
   announce(msg);
 }
-function showError(msg){ showResult(`<div class="card"><p class="muted">${msg}</p></div>`); announce(msg) }
+function showError(msg){ showResult(`<div class="tracking-inline-error"><p>${escapeHtml(msg)}</p></div>`); announce(msg); }
 
 function showSkeleton(show){
-  if (!result) return;
-  if (!show) return;
+  if (!result || !show) return;
   const sk = `
-    <div class="card track-skeleton" aria-hidden="true">
-      <div class="skeleton skeleton-line skeleton-xxl" style="width:36%"></div>
-      <div class="skeleton skeleton-line" style="width:48%"></div>
-      <div class="skeleton skeleton-line" style="width:28%"></div>
+    <div class="tracking-skeleton" aria-hidden="true">
+      <div class="skeleton-line skeleton-lg"></div>
+      <div class="skeleton-line skeleton-md"></div>
+      <div class="skeleton-line skeleton-sm"></div>
       <div class="skeleton-row">
-        <div class="skeleton skeleton-line" style="width:70%"></div>
-        <div class="skeleton skeleton-line" style="width:50%"></div>
-      </div>
-      <div class="skeleton-row" style="margin-top:12px">
-        <div class="skeleton skeleton-line" style="width:100%"></div>
-        <div class="skeleton skeleton-line" style="width:85%"></div>
-        <div class="skeleton skeleton-line" style="width:60%"></div>
+        <div class="skeleton-line skeleton-long"></div>
+        <div class="skeleton-line skeleton-short"></div>
       </div>
     </div>`;
-  result.innerHTML = sk; result.hidden = false;
+  result.innerHTML = sk;
+  result.hidden = false;
 }
 
 function setFormBusy(busy){
@@ -78,213 +93,508 @@ function setFormBusy(busy){
   if (formEl) formEl.setAttribute('aria-busy', busy ? 'true' : 'false');
 }
 
-async function lookup(id){
-  const normalizedId = normalizeTrackingNumber(id);
-  showLoader(true);
-  showSkeleton(true);
-  setFormBusy(true);
-  result.hidden = false;
-  try{
-    const { data, error } = await supabase.rpc('get_public_tracking', { tracking_number: normalizedId });
-    if (error){
-      console.error('Supabase RPC error', error);
-      const friendly = getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.');
-      showError(friendly);
-      return;
-    }
-    if (!data || !data.shipment){
-      const emptyMessage = 'We could not find that tracking number.';
-      showError(`${emptyMessage} Please double-check the ID and try again.`);
-      return;
-    }
-    renderParcel(data.shipment, data.events || []);
-  }catch(err){
-    console.error(err);
-    const friendly = getFriendlyErrorMessage(err, 'Unable to fetch tracking data right now. Please try again later.');
-    showError(friendly);
-  }finally{
-    showLoader(false);
-    setFormBusy(false);
-  }
+function normalizeTrackingData(raw = {}) {
+  const shipment = raw.shipment || raw || {};
+  const events = Array.isArray(raw.events) ? raw.events : [];
+
+  return {
+    shipment: {
+      ...shipment,
+      tracking_number: shipment.tracking_number || shipment.trackingId || '',
+      sender_name: shipment.sender_name || shipment.sender || '',
+      receiver_name: shipment.receiver_name || shipment.recipient_name || shipment.recipient || '',
+      origin: shipment.origin || '',
+      destination: shipment.destination || '',
+      status: shipment.status || '',
+      estimated_delivery: shipment.estimated_delivery || null,
+      created_at: shipment.created_at || null,
+      updated_at: shipment.updated_at || null,
+      actual_delivery: shipment.actual_delivery || null,
+      carrier: shipment.carrier || '',
+      service: shipment.service || '',
+      shipment_date: shipment.shipment_date || null
+    },
+    events: events.map((event, index) => ({
+      ...event,
+      id: event.id || `${shipment.tracking_number || 'event'}-${index}`,
+      status: event.status || '',
+      description: event.description || '',
+      location: event.location || '',
+      event_time: event.event_time || event.created_at || null,
+      created_at: event.created_at || null
+    }))
+  };
 }
 
-function renderParcel(shipment, events){
-  const created = shipment.created_at ? formatDateTimeDisplay(shipment.created_at) : '';
-  const sorted = (events || []).slice().sort((a,b)=> new Date(a.event_time) - new Date(b.event_time));
-  const latestIndex = sorted.length - 1;
-  // Determine current/latest event (prefer latest tracking event if available)
-  const currentEvent = (sorted.length > 0) ? sorted[latestIndex] : null;
-  // Reverse array so latest events appear at top
-  const reversedSorted = sorted.slice().reverse();
-  const historyHtml = reversedSorted.map((h, idx)=>{
-    const t = h.event_time ? formatDateTimeDisplay(h.event_time) : '';
-    const displayStatus = getShipmentStatusDisplayValue(h.status || '');
-    // First item (idx 0) is the latest, rest are older
-    const state = idx === 0 ? 'current' : 'completed';
+function normalizeTrackingStatus(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const lower = raw.toLowerCase();
+  const aliasMap = {
+    'on_hold': 'exception',
+    'on-hold': 'exception',
+    'on hold': 'exception',
+    'hold': 'exception',
+    'pending': 'shipment_created',
+    'waiting': 'shipment_created',
+    'awaiting pickup': 'shipment_created',
+    'format issue': 'exception'
+  };
+
+  if (aliasMap[lower]) return aliasMap[lower];
+
+  const normalized = normalizeShipmentStatus(raw);
+  if (normalized) return normalized;
+
+  if (lower.includes('hold')) return 'exception';
+  return '';
+}
+
+function getStatusConfig(status) {
+  const normalized = normalizeTrackingStatus(status) || 'unknown';
+  return STATUS_META[normalized] || STATUS_META.unknown;
+}
+
+function formatTrackingDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatTrackingDateTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
+function getLatestEvent(events) {
+  if (!Array.isArray(events) || !events.length) return null;
+  const [latest] = [...events].sort((a, b) => {
+    const aTime = new Date(a.event_time || a.created_at || 0).getTime();
+    const bTime = new Date(b.event_time || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+  return latest || null;
+}
+
+function getCurrentShipmentStatus(shipment, events) {
+  const statusFromShipment = shipment && shipment.status ? normalizeTrackingStatus(shipment.status) : '';
+  if (statusFromShipment) return statusFromShipment;
+
+  const latest = getLatestEvent(events);
+  const statusFromLatest = latest && latest.status ? normalizeTrackingStatus(latest.status) : '';
+  return statusFromLatest || 'shipment_created';
+}
+
+function getEstimatedDeliveryInfo(shipment) {
+  if (!shipment || !shipment.estimated_delivery) return null;
+  const date = new Date(shipment.estimated_delivery);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const weekday = date.toLocaleDateString(undefined, { weekday: 'long' });
+  const month = date.toLocaleDateString(undefined, { month: 'long' });
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const time = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+  return {
+    dateLabel: `${weekday}, ${month} ${day}${year ? `, ${year}` : ''}`,
+    timeLabel: time ? `by ${time}` : ''
+  };
+}
+
+function renderShipmentProgress(status) {
+  const currentKey = normalizeTrackingStatus(status) || 'shipment_created';
+
+  // Filter sequence: hide exception by default unless shipment is in exception status
+  let sequence = STATUS_SEQUENCE;
+  if (currentKey !== 'exception') {
+    sequence = STATUS_SEQUENCE.filter(s => s !== 'exception');
+  }
+
+  const currentIndex = sequence.indexOf(currentKey);
+  const isDelivered = currentKey === 'delivered';
+
+  return sequence.map((stage, index) => {
+    const config = getStatusConfig(stage);
+    let state = 'upcoming';
+    let variantClass = config.variant;
+
+    if (index < currentIndex) {
+      state = 'completed';
+    } else if (index === currentIndex) {
+      state = 'current';
+      // Apply info (blue) color for in_transit when it's current
+      if (stage === 'in_transit') {
+        variantClass = 'info';
+      }
+    }
+
+    // When delivered, all completed nodes should be green
+    if (state === 'completed' && isDelivered) {
+      variantClass = 'success';
+    }
+
+    // Delivered node is always green when reached or completed
+    if (stage === 'delivered' && (state === 'completed' || state === 'current')) {
+      variantClass = 'success';
+    }
+
+    const icon = state === 'completed' ? '✓' : (state === 'current' ? config.icon : '•');
+
     return `
-      <li class="timeline-item ${state}" data-idx="${idx}">
-        <div class="item-indicator" aria-hidden="true"></div>
-        <div class="item-body">
-          <div class="item-head">
-            <h4 class="item-title">${escapeHtml(displayStatus)}</h4>
-            <div class="item-time muted">${t}</div>
-          </div>
-          <div class="item-meta muted">${escapeHtml(h.location || '')}</div>
-          ${h.description ? `<div class="item-desc">${escapeHtml(h.description)}</div>` : ''}
-        </div>
-      </li>`;
+      <div class="progress-step ${state} ${variantClass}">
+        <div class="progress-node" aria-hidden="true">${icon}</div>
+        <div class="progress-label">${escapeHtml(config.short)}</div>
+      </div>
+    `;
   }).join('');
+}
 
-  // prefer latest event status when available
-  const displayStatusRaw = (currentEvent && currentEvent.status) ? currentEvent.status : shipment.status;
-  const normalizedStatus = normalizeShipmentStatus(displayStatusRaw || '');
-  const statusInfo = getShipmentStatusInfo(normalizedStatus);
+function renderHistoryList(events, filterValue, expanded) {
+  const ordered = [...events].sort((a, b) => {
+    const aTime = new Date(a.event_time || a.created_at || 0).getTime();
+    const bTime = new Date(b.event_time || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
 
-  const etaHtml = shipment.estimated_delivery ? `<div class="eta"><span class="eta-label">Estimated delivery</span><span class="eta-date">${new Date(shipment.estimated_delivery).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span></div>` : `<div class="eta muted">Estimated delivery unavailable</div>`;
+  const filtered = filterValue === 'all'
+    ? ordered
+    : ordered.filter((event) => normalizeTrackingStatus(event.status) === filterValue);
 
-  // Build route locations array from events
-  const routeLocations = [];
-  if (shipment.origin) routeLocations.push({ name: shipment.origin, type: 'origin', status: 'completed' });
-  if (currentEvent && currentEvent.location) routeLocations.push({ name: currentEvent.location, type: 'current', status: 'current' });
-  if (shipment.destination) routeLocations.push({ name: shipment.destination, type: 'destination', status: 'upcoming' });
-  
-  const routeHtml = routeLocations.map((loc, idx) => {
-    const isOrigin = idx === 0;
-    const isCurrent = loc.type === 'current';
-    const isDestination = idx === routeLocations.length - 1;
+  const visible = expanded ? filtered : filtered.slice(0, 3);
+  const items = visible.length > 0 ? visible.map((event) => {
+    const eventStatus = normalizeTrackingStatus(event.status) || 'unknown';
+    const eventInfo = getStatusConfig(eventStatus);
+    const eventTime = event.event_time || event.created_at;
+    const statusLabel = getShipmentStatusDisplayValue(event.status || eventInfo.label);
+    const description = event.description ? `<div class="history-description">${escapeHtml(event.description)}</div>` : '';
+    const location = event.location ? `<div class="history-location">${escapeHtml(event.location)}</div>` : '';
+    const timestamp = eventTime ? `<div class="history-time">${escapeHtml(formatTrackingDate(eventTime))}</div>` : '';
+
     return `
-      <div class="route-stop ${loc.status}">
-        <div class="route-dot ${isCurrent ? 'current-dot' : ''}" aria-hidden="true"></div>
-        <div class="route-info">
-          <div class="route-name">${escapeHtml(loc.name)}</div>
-          ${isCurrent ? `<div class="route-status">Current location</div>` : ''}
-          ${isOrigin ? `<div class="route-label">Origin</div>` : ''}
-          ${isDestination ? `<div class="route-label">Destination</div>` : ''}
-          ${isCurrent && currentEvent && currentEvent.event_time ? `<div class="route-date muted">${escapeHtml(formatDateTimeDisplay(currentEvent.event_time))}</div>` : ''}
+      <li class="history-item">
+        <div class="history-marker ${eventInfo.variant}" aria-hidden="true"></div>
+        <div class="history-content">
+          <div class="history-head">
+            <div class="history-status">${escapeHtml(statusLabel)}</div>
+            ${timestamp}
+          </div>
+          ${description}
+          ${location}
+        </div>
+      </li>
+    `;
+  }).join('') : '<li class="history-empty">No matching events for this filter.</li>';
+
+  return { filtered, items };
+}
+
+function renderRouteStops(shipment, currentLocation) {
+  const stops = [];
+
+  if (shipment.origin) {
+    stops.push({ label: 'Origin', location: shipment.origin, state: 'completed' });
+  }
+
+  if (currentLocation) {
+    stops.push({ label: 'Current location', location: currentLocation, state: 'current' });
+  }
+
+  if (shipment.destination) {
+    stops.push({ label: 'Destination', location: shipment.destination, state: 'upcoming' });
+  }
+
+  return stops.map((stop, index) => {
+    const isCurrent = stop.state === 'current';
+    const dotClass = isCurrent ? 'route-dot current' : 'route-dot';
+    return `
+      <div class="route-stop ${stop.state}">
+        <div class="route-visual-column">
+          <span class="${dotClass}" aria-hidden="true"></span>
+          ${index < stops.length - 1 ? '<span class="route-line" aria-hidden="true"></span>' : ''}
+        </div>
+        <div class="route-copy">
+          <div class="route-name">${escapeHtml(stop.location)}</div>
+          <div class="route-label">${escapeHtml(stop.label)}</div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function renderParcel(shipment, events) {
+  const normalized = normalizeTrackingData({ shipment, events });
+  const safeShipment = normalized.shipment;
+  const safeEvents = normalized.events;
+  const latestEvent = getLatestEvent(safeEvents);
+  const currentStatusKey = getCurrentShipmentStatus(safeShipment, safeEvents);
+  const statusConfig = getStatusConfig(currentStatusKey);
+  const normalizedStatus = normalizeTrackingStatus(currentStatusKey);
+  const latestLocation = (latestEvent && latestEvent.location && normalizeTrackingStatus(latestEvent.status) === currentStatusKey)
+    ? latestEvent.location
+    : safeShipment.origin || safeShipment.destination || '';
+  const shipmentNumber = safeShipment.tracking_number || '';
+  const lastUpdated = latestEvent && (latestEvent.event_time || latestEvent.created_at)
+    ? formatTrackingDateTime(latestEvent.event_time || latestEvent.created_at)
+    : safeShipment.updated_at
+      ? formatTrackingDateTime(safeShipment.updated_at)
+      : safeShipment.created_at
+        ? formatTrackingDateTime(safeShipment.created_at)
+        : '';
+
+  const detailFields = [
+    { label: 'Tracking ID', value: shipmentNumber },
+    { label: 'Sender', value: safeShipment.sender_name || '' },
+    { label: 'Recipient', value: safeShipment.receiver_name || '' },
+    { label: 'From', value: safeShipment.origin || '' },
+    { label: 'To', value: safeShipment.destination || '' },
+    { label: 'Created', value: safeShipment.created_at ? formatTrackingDateTime(safeShipment.created_at) : '' }
+  ];
+
+  const extraDetails = [
+    { label: 'Carrier', value: safeShipment.carrier || '' },
+    { label: 'Service', value: safeShipment.service || '' },
+    { label: 'Shipment date', value: safeShipment.shipment_date ? formatTrackingDate(safeShipment.shipment_date) : '' },
+    { label: 'Actual delivery', value: safeShipment.actual_delivery ? formatTrackingDateTime(safeShipment.actual_delivery) : '' }
+  ].filter((entry) => entry.value);
+
+  const estimated = getEstimatedDeliveryInfo(safeShipment);
+  const matchingEvent = safeEvents.find((event) => normalizeTrackingStatus(event.status) === currentStatusKey) || latestEvent;
+  const currentMessage = matchingEvent && matchingEvent.description ? matchingEvent.description : getShipmentStatusMessage(currentStatusKey) || statusConfig.description;
+  const statusLabel = getShipmentStatusDisplayValue(currentStatusKey);
+
+  const routeStops = renderRouteStops(safeShipment, latestLocation);
+  const eventOptions = ['all', ...new Set(safeEvents.map((event) => normalizeTrackingStatus(event.status)).filter(Boolean))];
+  const filterOptions = eventOptions.map((value) => {
+    const isAll = value === 'all';
+    const label = isAll ? 'All Events' : getShipmentStatusDisplayValue(value);
+    const selected = TRACKING_STATE.filter === value ? 'selected' : '';
+    return `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(label)}</option>`;
+  }).join('');
+
+  const historyPreview = renderHistoryList(safeEvents, TRACKING_STATE.filter, TRACKING_STATE.expanded);
+  const historySummary = historyPreview.items;
 
   const html = `
-    <div class="tracking-result">
-      <div class="result-top">
-        <div class="top-controls">
-          <a href="#" id="track-another" class="track-back">← Track another shipment</a>
-          <a href="#" id="remove-result" class="track-remove">Remove</a>
+    <article class="tracking-result">
+      <header class="tracking-header tracking-panel">
+        <div class="tracking-header-row">
+          <button type="button" id="track-another" class="track-back-link" aria-label="Track another shipment">← Track another shipment</button>
         </div>
-        
-        <div class="top-cards">
-          <div class="summary-card card">
-            <div class="status-badge ${statusInfo.class}">
-              <div class="status-icon" aria-hidden="true">!</div>
-              <div class="status-text">${escapeHtml(getShipmentStatusDisplayValue(currentEvent?.status || shipment.status))}</div>
-            </div>
-            ${currentEvent && currentEvent.description ? `<div class="status-message">${escapeHtml(currentEvent.description)}</div>` : ''}
-            ${currentEvent && currentEvent.location ? `<div class="status-location muted">${escapeHtml(currentEvent.location)}</div>` : ''}
-            
-            <div class="summary-sep"></div>
-            
-            <div class="eta-section">
-              <div class="eta-label muted">Estimated delivery</div>
-              ${shipment.estimated_delivery ? (()=>{
-                const d = new Date(shipment.estimated_delivery);
-                const weekday = d.toLocaleDateString(undefined,{weekday:'long'});
-                const day = d.getDate();
-                const month = d.toLocaleDateString(undefined,{month:'long'});
-                const time = d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
-                return `
-                  <div class="eta-value">${escapeHtml(weekday)}, ${escapeHtml(month)} ${escapeHtml(String(day))}</div>
-                  <div class="eta-time muted">by ${escapeHtml(time)}</div>
-                `;
-              })() : `<div class="eta-muted muted">Unavailable</div>`}
-            </div>
-          </div>
-
-          <div class="route-card card">
-            <h4 class="route-title">Shipment Route</h4>
-            <div class="route-container">
-              ${routeHtml}
-            </div>
-            <div class="route-map" aria-hidden="true"></div>
+        <div class="tracking-id-row">
+          <div class="tracking-id-label">Tracking ID</div>
+          <div class="tracking-id-actions">
+            <span class="tracking-id-value">${escapeHtml(shipmentNumber || 'Tracking ID unavailable')}</span>
+            <button type="button" id="copy-tracking-number" class="copy-button" aria-label="Copy tracking number">Copy</button>
           </div>
         </div>
-      </div>
+        <div class="tracking-meta">Last updated ${escapeHtml(lastUpdated || '—')}</div>
+      </header>
 
-      <div class="result-body">
-        <div class="body-left">
-          <div class="history-card card">
-            <h3>Shipment History</h3>
-            <ul id="timeline-list" class="timeline-list collapsed" data-total-items="${reversedSorted.length}">${ historyHtml && historyHtml.length ? historyHtml : `<li class="muted">Tracking history is not yet available.</li>` }</ul>
-            ${reversedSorted.length > 2 ? `<button id="toggle-history-btn" class="btn btn-toggle-history" aria-expanded="false">See All Tracking History</button>` : ''}
+      <div class="tracking-summary-grid">
+        <section class="item-panel tracking-panel status-panel ${statusConfig.variant}">
+          <div class="status-topline">
+            <div class="status-icon" aria-hidden="true">${escapeHtml(statusConfig.icon)}</div>
+            <div class="status-copy">
+              <div class="status-title">${escapeHtml(statusLabel)}</div>
+              <div class="status-message">${escapeHtml(currentMessage)}</div>
+            </div>
           </div>
-        </div>
+          <div class="status-location">${latestLocation ? `◆ ${escapeHtml(latestLocation)}` : ''}</div>
+          <div class="status-progress" aria-label="Shipment progress">
+            ${renderShipmentProgress(currentStatusKey)}
+          </div>
+          <div class="status-estimate">
+            <div class="estimate-label">Estimated delivery</div>
+            ${estimated ? `
+              <div class="estimate-date">${escapeHtml(estimated.dateLabel)}</div>
+              ${estimated.timeLabel ? `<div class="estimate-time">${escapeHtml(estimated.timeLabel)}</div>` : ''}
+            ` : '<div class="estimate-date estimate-empty">Unavailable</div>'}
+          </div>
+        </section>
 
-        <aside class="details-col card">
-          <h3>Shipment Details</h3>
-          <dl class="details-list">
-            <dt>Tracking ID</dt><dd>${escapeHtml(shipment.tracking_number)}</dd>
-            ${shipment.sender_name ? `<dt>Sender</dt><dd>${escapeHtml(shipment.sender_name)}</dd>` : ''}
-            ${shipment.receiver_name ? `<dt>Recipient</dt><dd>${escapeHtml(shipment.receiver_name)}</dd>` : ''}
-            ${shipment.origin ? `<dt>From</dt><dd>${escapeHtml(shipment.origin)}</dd>` : ''}
-            ${shipment.destination ? `<dt>To</dt><dd>${escapeHtml(shipment.destination)}</dd>` : ''}
-            ${created ? `<dt>Created</dt><dd>${created}</dd>` : ''}
+        <aside class="item-panel tracking-panel details-panel">
+          <div class="panel-heading-row">
+            <h2>Shipment Details</h2>
+            <button type="button" id="details-toggle" class="details-toggle" aria-expanded="false">View full details →</button>
+          </div>
+          <dl class="detail-list">
+            ${detailFields.filter((entry) => entry.value).map((entry) => `
+              <div class="detail-row">
+                <dt>${escapeHtml(entry.label)}</dt>
+                <dd>${escapeHtml(entry.value)}</dd>
+              </div>
+            `).join('')}
           </dl>
+          <div id="full-details-panel" class="full-details-panel" hidden>
+            <dl class="detail-list detail-list-secondary">
+              ${extraDetails.map((entry) => `
+                <div class="detail-row">
+                  <dt>${escapeHtml(entry.label)}</dt>
+                  <dd>${escapeHtml(entry.value)}</dd>
+                </div>
+              `).join('')}
+            </dl>
+          </div>
         </aside>
       </div>
-    </div>`;
+
+      <div class="tracking-lower-grid">
+        <section class="item-panel tracking-panel history-panel">
+          <div class="panel-heading-row">
+            <h2>Shipment History</h2>
+            <label class="history-filter-wrap" aria-label="Filter shipment history">
+              <select id="history-filter" class="history-filter">
+                ${filterOptions}
+              </select>
+            </label>
+          </div>
+
+          <ul id="history-list" class="history-list">
+            ${historySummary}
+          </ul>
+
+          ${historyPreview.filtered.length > 3 ? `
+            <button type="button" id="toggle-history-btn" class="toggle-history-btn" aria-expanded="${TRACKING_STATE.expanded ? 'true' : 'false'}">
+              ${TRACKING_STATE.expanded ? 'Show Less' : 'Show More'}
+            </button>
+          ` : ''}
+        </section>
+
+        <aside class="item-panel tracking-panel route-panel">
+          <h2>Shipment Route</h2>
+          <div class="route-list">
+            ${routeStops}
+          </div>
+          <div class="route-map" aria-hidden="true">
+            <span class="route-map-node node-origin"></span>
+            <span class="route-map-node node-current"></span>
+            <span class="route-map-node node-destination"></span>
+          </div>
+        </aside>
+      </div>
+    </article>
+  `;
 
   showResult(html);
-  announce(`Shipment ${shipment.tracking_number} — ${getShipmentStatusInfo(normalizedStatus).label}`);
+  TRACKING_STATE.shipment = safeShipment;
+  TRACKING_STATE.events = safeEvents;
+  announce(`Shipment ${shipmentNumber} — ${statusLabel}`);
 
-  // wire up track another link/buttons
   const back = document.getElementById('track-another');
-  function resetToSearch(e){ if (e) e.preventDefault(); result.hidden = true; document.getElementById('empty').hidden = false; input.value = ''; input.removeAttribute('aria-invalid'); input.focus(); }
-  if (back) back.addEventListener('click', resetToSearch);
-  
-  // wire up Remove control (keeps user on public tracking page but resets view)
-  const removeLink = document.getElementById('remove-result');
-  if (removeLink) removeLink.addEventListener('click', resetToSearch);
-  
-  // wire up history toggle button
-  const toggleBtn = document.getElementById('toggle-history-btn');
-  const timelineList = document.getElementById('timeline-list');
-  if (toggleBtn && timelineList) {
-    toggleBtn.addEventListener('click', (ev) => {
-      ev.preventDefault();
-      const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-      toggleBtn.setAttribute('aria-expanded', String(!isExpanded));
-      
-      if (!isExpanded) {
-        // Expand to show all
-        timelineList.classList.remove('collapsed');
-        timelineList.classList.add('expanded');
-        toggleBtn.textContent = 'Hide Tracking History';
-      } else {
-        // Collapse to show only first 2
-        timelineList.classList.remove('expanded');
-        timelineList.classList.add('collapsed');
-        toggleBtn.textContent = 'See All Tracking History';
+  if (back) {
+    back.addEventListener('click', (event) => {
+      event.preventDefault();
+      const empty = document.getElementById('empty');
+      if (result) result.hidden = true;
+      if (empty) empty.hidden = false;
+      if (input) {
+        input.value = '';
+        input.removeAttribute('aria-invalid');
+        input.focus();
       }
+    });
+  }
+
+  const copyBtn = document.getElementById('copy-tracking-number');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const target = shipmentNumber || '';
+      const button = copyBtn;
+      const original = button.textContent;
+      const fallback = () => {
+        button.textContent = 'Copied ✓';
+        window.setTimeout(() => {
+          button.textContent = original;
+        }, 1500);
+      };
+
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(target);
+        } else {
+          const temp = document.createElement('textarea');
+          temp.value = target;
+          temp.setAttribute('readonly', '');
+          temp.style.position = 'fixed';
+          temp.style.opacity = '0';
+          document.body.appendChild(temp);
+          temp.select();
+          try {
+            document.execCommand('copy');
+          } catch (err) {
+            console.warn('Clipboard fallback failed', err);
+          }
+          document.body.removeChild(temp);
+        }
+        button.textContent = 'Copied ✓';
+      } catch (error) {
+        console.warn('Copy failed', error);
+        button.textContent = 'Copy failed';
+      }
+
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    });
+  }
+
+  const detailsToggle = document.getElementById('details-toggle');
+  const fullDetails = document.getElementById('full-details-panel');
+  if (detailsToggle && fullDetails) {
+    detailsToggle.addEventListener('click', () => {
+      const expanded = fullDetails.hidden === false;
+      fullDetails.hidden = expanded;
+      detailsToggle.setAttribute('aria-expanded', String(!expanded));
+      detailsToggle.textContent = expanded ? 'View full details →' : 'Hide full details ←';
+    });
+  }
+
+  const historyFilter = document.getElementById('history-filter');
+  const historyList = document.getElementById('history-list');
+  const toggleHistory = document.getElementById('toggle-history-btn');
+
+  if (historyFilter && historyList && toggleHistory) {
+    const refreshHistory = () => {
+      const next = renderHistoryList(TRACKING_STATE.events, TRACKING_STATE.filter, TRACKING_STATE.expanded);
+      historyList.innerHTML = next.items;
+      toggleHistory.hidden = next.filtered.length <= 3;
+      toggleHistory.textContent = TRACKING_STATE.expanded ? 'Show Less' : 'Show More';
+      toggleHistory.setAttribute('aria-expanded', String(TRACKING_STATE.expanded));
+    };
+
+    historyFilter.addEventListener('change', (event) => {
+      TRACKING_STATE.filter = event.target.value;
+      TRACKING_STATE.expanded = false;
+      refreshHistory();
+    });
+
+    toggleHistory.addEventListener('click', () => {
+      TRACKING_STATE.expanded = !TRACKING_STATE.expanded;
+      refreshHistory();
     });
   }
 }
 
-function renderProgress(events, shipment){
-  const stages = ['shipment_created','picked_up','in_transit','out_for_delivery','delivered'];
-  const currentStatus = normalizeShipmentStatus(shipment.status || '');
-  return stages.map(stage => {
-    const label = getShipmentStatusInfo(stage).label;
-    let state = 'upcoming';
-    const hasCurrent = currentStatus === stage;
-    const hasPrior = events.some(e => normalizeShipmentStatus(e.status || '') === stage);
-    if (hasCurrent || hasPrior) state = 'current';
-    if (events.findIndex(e => normalizeShipmentStatus(e.status || '') === stage) < events.length - 1) state = 'completed';
-    return `<div class="progress-step ${state}"><div class="step-dot" aria-hidden="true"></div><div class="step-label">${label}</div></div>`;
-  }).join('');
+function escapeHtml(value) {
+  if (value === null || value === undefined || value === '') return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
-
-function escapeHtml(s){if(!s && s !== 0) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function applyTrackingInputFormatting() {
   if (!input) return;
@@ -309,8 +619,8 @@ input?.addEventListener('input', () => {
   }
 });
 
-form.addEventListener('submit', (e)=>{
-  e.preventDefault();
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
   const id = normalizeTrackingNumber(input.value);
   if (!id) {
     input.setAttribute('aria-invalid', 'true');
@@ -318,8 +628,8 @@ form.addEventListener('submit', (e)=>{
     showError('Enter a tracking number to look up a shipment.');
     return;
   }
-  if (!isTrackingNumberValid(id)){
-    input.setAttribute('aria-invalid','true');
+  if (!isTrackingNumberValid(id)) {
+    input.setAttribute('aria-invalid', 'true');
     input.reportValidity?.();
     showError('Please enter a valid tracking ID in the format TRE-1234-5678-9012.');
     input.focus();
@@ -328,13 +638,42 @@ form.addEventListener('submit', (e)=>{
   lookup(id);
 });
 
-// If query param provided from index quick track
+async function lookup(id) {
+  const normalizedId = normalizeTrackingNumber(id);
+  showLoader(true);
+  showSkeleton(true);
+  setFormBusy(true);
+  if (result) result.hidden = false;
+
+  try {
+    const { data, error } = await supabase.rpc('get_public_tracking', { tracking_number: normalizedId });
+    if (error) {
+      console.error('Supabase RPC error', error);
+      showError(getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.'));
+      return;
+    }
+
+    if (!data || !data.shipment) {
+      showError('We could not find that tracking number. Please double-check the ID and try again.');
+      return;
+    }
+
+    renderParcel(data.shipment, data.events || []);
+  } catch (error) {
+    console.error(error);
+    showError(getFriendlyErrorMessage(error, 'Unable to fetch tracking data right now. Please try again later.'));
+  } finally {
+    showLoader(false);
+    setFormBusy(false);
+  }
+}
+
 const params = new URLSearchParams(location.search);
 const qid = params.get('id');
-if (qid){
-  input.value = qid; lookup(qid);
+if (qid) {
+  input.value = qid;
+  lookup(qid);
 } else {
-  // show intentional empty state
   const empty = document.getElementById('empty');
-  if (empty) { empty.hidden = false; }
+  if (empty) empty.hidden = false;
 }

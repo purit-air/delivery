@@ -4,15 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Track Shipment — Redirecting</title>
-  <meta http-equiv="refresh" content="0;url=customer/track.html" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <main class="container" style="padding-top:44px; padding-bottom:44px;">
     <section class="card" aria-live="polite" aria-atomic="true">
       <h1>Redirecting to the updated customer tracking page...</h1>
-      <p class="muted">If you are not redirected automatically, <a href="customer/track.html">click here</a>.</p>
+      <p class="muted">If you are not redirected automatically, <a href="customer/track.html" id="fallback-link">click here</a>.</p>
     </section>
   </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const targetUrl = id ? `customer/track.html?id=${encodeURIComponent(id)}` : 'customer/track.html';
+    const fallback = document.getElementById('fallback-link');
+    if (fallback) fallback.href = targetUrl;
+    location.href = targetUrl;
+  </script>
 </body>
 </html>

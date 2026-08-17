@@ -650,15 +650,17 @@ async function editPage(){
     submitButton.textContent = 'Saving…';
     setMessage('Saving shipment changes…', 'info');
 
+    const nextStatus = normalizeAdminStatusInput(el('status').value || 'shipment_created');
+    const eventStatusValue = el('event_status')?.value ? normalizeShipmentStatus(el('event_status').value) || null : null;
     const payload = {
       shipment_id: id,
       sender_name: el('sender_name').value.trim() || null,
       receiver_name: el('recipient_name').value.trim() || null,
       origin: el('origin').value.trim() || null,
       destination: el('destination').value.trim() || null,
-      status: normalizeAdminStatusInput(el('status').value || 'shipment_created'),
+      status: nextStatus,
       estimated_delivery: el('estimated_delivery').value ? new Date(el('estimated_delivery').value + 'T00:00:00Z').toISOString() : null,
-      event_status: el('event_status')?.value ? normalizeShipmentStatus(el('event_status').value) || null : null,
+      event_status: eventStatusValue || nextStatus,
       event_location: el('event_location')?.value.trim() || null,
       event_description: el('event_description')?.value.trim() || null,
       event_time: new Date().toISOString(),
