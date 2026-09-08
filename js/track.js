@@ -8,7 +8,7 @@ import {
   getShipmentStatusDisplayValue,
   getShipmentStatusInfo,
   getShipmentStatusMessage
-} from '../../js/shared-contract.js';
+} from './shared-contract.js';
 
 const form = document.getElementById('track-form');
 const input = document.getElementById('tracking');
