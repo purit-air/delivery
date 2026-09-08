@@ -2,7 +2,7 @@
   "name": "delivio-tracking",
   "private": true,
   "scripts": {
-    "dev": "python3 -m http.server 4173 --directory .",
-    "start": "python3 -m http.server 4173 --directory ."
+    "dev": "python3 -m http.server 3000 --directory .",
+    "start": "python3 -m http.server 3000 --directory ."
   }
 }

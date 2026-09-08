@@ -38,9 +38,9 @@
           <h1>Moving what matters — reliable delivery, simplified.</h1>
           <p class="lead">From pickup to doorstep: real-time tracking, clear ETAs, and secure handling. Enter your tracking number to get started.</p>
 
-          <form id="quick-track" class="tracking-card" aria-label="Quick track">
+          <form id="quick-track" class="tracking-card" action="track.html" method="get" aria-label="Quick track">
             <label for="q-tracking">Track your shipment</label>
-            <input id="tracking" name="tracking" placeholder="TRE-XXXX-XXXX-XXXX" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" aria-required="true" autocomplete="on" spellcheck="false" inputmode="text" />
+            <input id="q-tracking" name="id" placeholder="TRE-XXXX-XXXX-XXXX" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" aria-required="true" autocomplete="on" spellcheck="false" inputmode="text" />
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">Track Shipment</button>
             </div>

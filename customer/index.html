@@ -23,7 +23,7 @@
         <span aria-hidden="true">☰</span>
       </button>
       <nav class="nav" id="primary-nav" aria-label="Primary navigation">
-        <a href="track.html" class="btn">Track Shipment</a>
+        <a href="track.html" class="primary-btn">Track Shipment</a>
         <a href="#services" class="btn btn-ghost">Services</a>
         <a href="#about" class="btn btn-ghost">About</a>
       </nav>
@@ -37,14 +37,14 @@
           <h1>Moving what matters — reliable delivery, simplified.</h1>
           <p class="lead">From pickup to doorstep: real-time tracking, clear ETAs, and secure handling. Enter your tracking number to get started.</p>
 
-          <form id="quick-track" class="tracking-card" aria-label="Quick track">
+          <form id="quick-track" class="tracking-card" action="track.html" method="get" aria-label="Quick track">
             <label for="q-tracking">Track your shipment</label>
-            <input id="q-tracking" name="tracking" placeholder="Enter tracking number — e.g. TRE-1234-5678-9012" aria-label="Tracking number" autocomplete="off" spellcheck="false" inputmode="text" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" />
+            <input id="q-tracking" name="id" placeholder="Enter tracking number — e.g. TRE-1234-5678-9012" aria-label="Tracking number" autocomplete="off" spellcheck="false" inputmode="text" pattern="TRE-[0-9]{4}-[0-9]{4}-[0-9]{4}" title="Format: TRE-1234-5678-9012" />
             <div class="tracking-help-text">
               <small>Find your tracking number on your order confirmation email or delivery notice. Format: <code>TRE-XXXX-XXXX-XXXX</code></small>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Track Shipment</button>
+              <button type="submit" class="primary-btn">Track Shipment</button>
             </div>
           </form>
         </div>

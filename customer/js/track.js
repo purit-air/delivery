@@ -215,11 +215,10 @@ function getEstimatedDeliveryInfo(shipment) {
 function renderShipmentProgress(status) {
   const currentKey = normalizeTrackingStatus(status) || 'shipment_created';
 
-  // Filter sequence: hide exception by default unless shipment is in exception status
-  let sequence = STATUS_SEQUENCE;
-  if (currentKey !== 'exception') {
-    sequence = STATUS_SEQUENCE.filter(s => s !== 'exception');
-  }
+  // Exception occupies the in-transit position instead of adding a sixth node.
+  const sequence = currentKey === 'exception'
+    ? ['shipment_created', 'picked_up', 'exception', 'out_for_delivery', 'delivered']
+    : STATUS_SEQUENCE.filter(s => s !== 'exception');
 
   const currentIndex = sequence.indexOf(currentKey);
   const isDelivered = currentKey === 'delivered';
@@ -228,6 +227,7 @@ function renderShipmentProgress(status) {
     const config = getStatusConfig(stage);
     let state = 'upcoming';
     let variantClass = config.variant;
+    let connectorClass = 'connector-neutral';
 
     if (index < currentIndex) {
       state = 'completed';
@@ -249,10 +249,16 @@ function renderShipmentProgress(status) {
       variantClass = 'success';
     }
 
+    if (index < currentIndex) {
+      connectorClass = currentKey === 'exception' && index === currentIndex - 1
+        ? 'connector-exception'
+        : 'connector-complete';
+    }
+
     const icon = state === 'completed' ? '✓' : (state === 'current' ? config.icon : '•');
 
     return `
-      <div class="progress-step ${state} ${variantClass}">
+      <div class="progress-step ${state} ${variantClass} ${connectorClass}">
         <div class="progress-node" aria-hidden="true">${icon}</div>
         <div class="progress-label">${escapeHtml(config.short)}</div>
       </div>

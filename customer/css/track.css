@@ -480,12 +480,14 @@ a { text-decoration: none; color: inherit; }
 }
 
 .status-progress {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
   padding-top: 10px;
 }
 .progress-step {
+  flex: 1 1 0;
+  min-width: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -496,17 +498,23 @@ a { text-decoration: none; color: inherit; }
 .progress-step:not(:last-child)::after {
   content: "";
   position: absolute;
-  right: -8px;
+  z-index: 0;
+  left: 50%;
+  right: auto;
   top: 15px;
-  width: 18px;
+  width: 100%;
   height: 2px;
   background: rgba(148, 163, 184, 0.6);
 }
-.progress-step.completed:not(:last-child)::after,
-.progress-step.current:not(:last-child)::after {
+.progress-step.connector-complete:not(:last-child)::after {
   background: var(--track-success);
 }
+.progress-step.connector-exception:not(:last-child)::after {
+  background: var(--track-warning);
+}
 .progress-node {
+  position: relative;
+  z-index: 1;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -533,6 +541,11 @@ a { text-decoration: none; color: inherit; }
   background: var(--track-primary-soft);
   border-color: var(--track-primary);
   color: var(--track-primary);
+}
+.progress-step.current.success .progress-node {
+  background: var(--track-success-soft);
+  border-color: var(--track-success);
+  color: var(--track-success);
 }
 .progress-step.current.warning .progress-node {
   background: var(--track-warning-soft);
@@ -985,7 +998,7 @@ a { text-decoration: none; color: inherit; }
 
   .status-progress {
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-    gap: 6px;
+    gap: 0;
   }
 
   .status-panel {
@@ -993,8 +1006,9 @@ a { text-decoration: none; color: inherit; }
   }
 
   .progress-step:not(:last-child)::after {
-    right: -5px;
-    width: 10px;
+    left: 50%;
+    right: auto;
+    width: 100%;
     top: 12px;
   }
 
@@ -1205,7 +1219,7 @@ a { text-decoration: none; color: inherit; }
 
   .status-progress {
     grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 4px;
+    gap: 0;
   }
 
   .progress-node {

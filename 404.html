@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="robots" content="noindex" />
+  <title>Redirecting — Delivio</title>
+</head>
+<body>
+  <p>Redirecting...</p>
+  <script>
+    const isAdminPath = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+    location.replace(isAdminPath ? '/admin/login.html' : '/index.html');
+  </script>
+</body>
+</html>
